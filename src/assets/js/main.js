@@ -102,6 +102,100 @@
     });
   }
 
+
+  /* ── Movimento: solo se l'utente non ha chiesto di ridurlo ───────────── */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var header = document.querySelector('.site-header');
+
+  /* Header che si compatta + barra di avanzamento */
+  var bar = null;
+  if (!reduce.matches) {
+    bar = document.createElement('div');
+    bar.className = 'progress';
+    bar.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(bar);
+  }
+  var ticking = false;
+  var onScroll = function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      var y = window.scrollY || 0;
+      if (header) header.classList.toggle('is-scrolled', y > 24);
+      if (bar) {
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        bar.style.setProperty('--p', max > 0 ? Math.min(1, y / max).toFixed(4) : 0);
+      }
+      ticking = false;
+    });
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  if (!reduce.matches) {
+
+  /* Comparsa degli elementi allo scorrimento */
+  if ('IntersectionObserver' in window) {
+    var targets = document.querySelectorAll(
+      '.section .eyebrow, .section h2, .section-head, .section .lead, .split > div > p, .prose > *, ' +
+      '.card, .pillars li, .steps > li, .service, .faq details, .chips li, .modes li, .panel, ' +
+      '.contact__form > *, .contact__side, .map, .callout, .about__photo, .cta-band__in > *, .credentials li, .ticks li'
+    );
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        en.target.classList.add('is-in');
+        io.unobserve(en.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    var vh = window.innerHeight;
+    targets.forEach(function (el) {
+      if (el.getBoundingClientRect().top < vh * 0.92) return; // già in vista: nessuna attesa
+      var sibs = el.parentElement ? Array.prototype.indexOf.call(el.parentElement.children, el) : 0;
+      el.style.setProperty('--d', Math.min(sibs, 6) * 70 + 'ms');
+      el.classList.add('reveal');
+      el.addEventListener('transitionend', function done(e) {
+        if (e.propertyName !== 'opacity') return;
+        el.classList.remove('reveal', 'is-in'); // finito: torna agli effetti hover normali
+        el.style.removeProperty('--d');
+        el.removeEventListener('transitionend', done);
+      });
+      io.observe(el);
+    });
+  }
+
+  /* Luce che segue il cursore sulle card (solo mouse) */
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.addEventListener('pointermove', function (e) {
+      var c = e.target.closest && e.target.closest('.card, .service, .pillars li, .panel, .contact__side');
+      if (!c) return;
+      var r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    }, { passive: true });
+
+    /* Parallasse leggera nell'hero */
+    var hero = document.querySelector('.hero');
+    if (hero) {
+      var raf = 0;
+      hero.addEventListener('pointermove', function (e) {
+        var r = hero.getBoundingClientRect();
+        var x = ((e.clientX - r.left) / r.width - 0.5) * 2;
+        var y = ((e.clientY - r.top) / r.height - 0.5) * 2;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(function () {
+          hero.style.setProperty('--px', x.toFixed(3));
+          hero.style.setProperty('--py', y.toFixed(3));
+        });
+      }, { passive: true });
+      hero.addEventListener('pointerleave', function () {
+        hero.style.setProperty('--px', 0);
+        hero.style.setProperty('--py', 0);
+      });
+    }
+  }
+  } // fine movimento
+
   /* ── Mappa a richiesta (nessuna connessione a terzi finché non si preme) ─ */
   var map = document.querySelector('[data-map]');
   if (map) {

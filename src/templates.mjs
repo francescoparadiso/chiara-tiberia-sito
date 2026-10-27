@@ -57,6 +57,7 @@ ${ogImage ? `<meta property="og:image" content="${esc(siteUrl)}/assets/img/og.pn
 <link rel="preload" href="${href('assets/fonts/fraunces-soft-latin.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${href('assets/fonts/figtree-latin.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${href('assets/css/style.css')}">
+<link rel="stylesheet" href="${href('assets/css/motion.css')}">
 <script>document.documentElement.classList.add('js')</script>
 ${ld}
 </head>
@@ -150,22 +151,22 @@ function portrait(ctx, size, href) {
     const set = (list) => list.map((i) => `${href(i.url)} ${i.w}w`).join(', ');
     const sizes = size === 'lg' ? '(min-width: 900px) 440px, 80vw' : '(min-width: 900px) 380px, 80vw';
     const big = photo.jpg[photo.jpg.length - 1];
-    return `<figure class="portrait portrait--${size}"><div class="portrait__frame"><picture>
+    return `<figure class="portrait portrait--${size}"><div class="portrait__deco"><div class="portrait__frame"><picture>
       ${photo.avif.length ? `<source type="image/avif" srcset="${set(photo.avif)}" sizes="${sizes}">` : ''}
       <source type="image/webp" srcset="${set(photo.webp)}" sizes="${sizes}">
       <img src="${href(big.url)}" srcset="${set(photo.jpg)}" sizes="${sizes}" width="${photo.width}" height="${photo.height}" alt="${esc(cfg.photo.alt)}" ${size === 'lg' ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">
-    </picture></div></figure>`;
+    </picture></div></div></figure>`;
   }
-  return `<figure class="portrait portrait--${size}"><div class="portrait__frame portrait__frame--ph" role="img" aria-label="Spazio per il ritratto di ${esc(cfg.person.name)}">
+  return `<figure class="portrait portrait--${size}"><div class="portrait__deco"><div class="portrait__frame portrait__frame--ph" role="img" aria-label="Spazio per il ritratto di ${esc(cfg.person.name)}">
     <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
       <path d="M-10 510V210C-10 90 90 -10 200 -10S410 90 410 210v300z" fill="var(--sage-100)"/>
-      <path d="M40 510V230c0-95 70-170 160-170s160 75 160 170v280" fill="none" stroke="var(--sage-300)" stroke-width="2"/>
-      <path d="M95 510V250c0-70 48-120 105-120s105 50 105 120v260" fill="none" stroke="var(--sage-300)" stroke-width="2"/>
-      <path d="M150 510V270c0-40 22-70 50-70s50 30 50 70v240" fill="var(--bg)" fill-opacity=".55" stroke="var(--sage-300)" stroke-width="2"/>
+      <path d="M40 510V230c0-95 70-170 160-170s160 75 160 170v280" pathLength="1" class="arch" fill="none" stroke="var(--sage-300)" stroke-width="2"/>
+      <path d="M95 510V250c0-70 48-120 105-120s105 50 105 120v260" pathLength="1" class="arch" fill="none" stroke="var(--sage-300)" stroke-width="2"/>
+      <path d="M150 510V270c0-40 22-70 50-70s50 30 50 70v240" pathLength="1" class="arch" fill="var(--bg)" fill-opacity=".55" stroke="var(--sage-300)" stroke-width="2"/>
       <text x="200" y="338" text-anchor="middle" class="portrait__mono">${esc(cfg.person.initials)}</text>
     </svg>
     <span class="portrait__tag"><mark class="ph">[Qui andrà la foto di ${esc(cfg.person.givenName)}]</mark></span>
-  </div></figure>`;
+  </div></div></figure>`;
 }
 
 function ctaBand(ctx, href, text = 'Parliamone in un primo colloquio') {
@@ -204,6 +205,12 @@ export function homePage(ctx) {
   const b = cfg.business;
   const services = cfg.services.items.filter((s) => s.enabled);
   const modes = modeList(ctx);
+  const accent = h.titleAccent && h.title.includes(h.titleAccent) ? h.titleAccent : '';
+  const titleHtml = accent
+    ? esc(h.title).replace(esc(accent), (m) => `<span class="accent">${m}<svg class="accent__line" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path pathLength="1" d="M3 9 C 45 3, 85 13, 125 6 S 185 4, 197 8"/></svg></span>`)
+    : esc(h.title);
+  const tagIcons = ['home', 'play', 'path'];
+  const floatTags = cfg.whatIs.chips.slice(1, 4);
   return {
     path: '',
     home: true,
@@ -212,10 +219,11 @@ export function homePage(ctx) {
     jsonld: ctx.jsonld.base,
     body: (href) => `
 <section class="hero">
+  <div class="hero__bg" aria-hidden="true"><span></span><span></span><span></span></div>
   <div class="wrap hero__in">
     <div class="hero__text">
       <p class="eyebrow">${esc(h.eyebrow)}</p>
-      <h1>${esc(h.title)}</h1>
+      <h1>${titleHtml}</h1>
       <p class="lead">${ph(h.lead)}</p>
       <div class="actions">
         <a class="btn btn--primary" href="${href('contatti/#modulo')}">${esc(h.ctaPrimary)} ${icon('arrow')}</a>
@@ -227,9 +235,13 @@ export function homePage(ctx) {
         <li>${icon('check')}<span>Primo colloquio conoscitivo</span></li>
       </ul>
     </div>
-    <div class="hero__visual">${portrait(ctx, 'lg', href)}</div>
+    <div class="hero__visual">${portrait(ctx, 'lg', href)}
+      <ul class="float-tags" aria-hidden="true">${floatTags.map((tx, i) => `<li style="--i:${i}">${icon(tagIcons[i])}<span>${esc(tx)}</span></li>`).join('')}</ul>
+    </div>
   </div>
 </section>
+
+<div class="marquee" aria-hidden="true"><div class="marquee__track">${[0, 1].map(() => `<ul>${cfg.whatIs.chips.map((tx) => `<li>${esc(tx)}</li>`).join('')}</ul>`).join('')}</div></div>
 
 <section class="section" aria-labelledby="cos-e">
   <div class="wrap split">

@@ -111,6 +111,7 @@ export default {
   home: {
     eyebrow: 'Terapia occupazionale',
     title: 'Le attività di ogni giorno, al centro del percorso.',
+    titleAccent: 'ogni giorno', // parola evidenziata con il tratto disegnato (deve comparire nel titolo)
     lead:
       'Sono Chiara Tiberia, terapista occupazionale. Ti accompagno a capire che cosa è importante per te fare ogni giorno e a trovare, insieme, modi concreti per farlo: a casa, a scuola, al lavoro, nel tempo libero.',
     ctaPrimary: 'Richiedi un primo colloquio',
