@@ -1,0 +1,17 @@
+{
+  "name": "chiara-tiberia-sito",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sito vetrina statico di Chiara Tiberia, terapista occupazionale",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node build.mjs",
+    "build:final": "node build.mjs --strict",
+    "serve": "node scripts/serve.mjs",
+    "start": "node build.mjs && node scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
+  }
+}
